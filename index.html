@@ -239,6 +239,13 @@
                 reader.readAsDataURL(uploadSound.files[0]);
             }
         });
+        // 右鍵點擊listener
+        window.onload = function() {
+            mainImage.addEventListener('contextmenu', function(event) {
+                // prevent右鍵操作
+                event.preventDefault();
+            });
+        };
     </script>
 </body>
 </html>
