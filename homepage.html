@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Switcher with Settings</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #f0f0f0;
+            background-size: cover;
+            font-family: 'Georgia', serif;
+        }
+        .image-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+        .image-container img {
+            width: 300px;
+            height: auto;
+            display: block;
+        }
+        .settings-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 10;
+            font-family: 'Georgia', serif;
+        }
+        .settings-dialog {
+            display: none;
+            position: fixed;
+            top: 50px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 12px; /* 更小巧的文字 */
+            z-index: 10;
+            font-family: 'Georgia', serif;
+        }
+        .settings-dialog label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .settings-dialog .section {
+            margin-bottom: 10px;
+        }
+        .settings-dialog .section-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .settings-dialog .section-content {
+            padding-left: 10px;
+            border-left: 2px solid #ccc;
+        }
+        .settings-dialog input[type="range"] {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <button class="settings-button">Settings</button>
+    <div class="settings-dialog">
+        <div class="section">
+            <div class="section-header">Image</div>
+            <div class="section-content">
+                <label>
+                    Upload Default Image:
+                    <input type="file" id="uploadDefaultImage" accept="image/*">
+                </label>
+                <label>
+                    Upload Pinch Image:
+                    <input type="file" id="uploadPinchImage" accept="image/*">
+                </label>
+                <label>
+                    Background Color:
+                    <input type="color" id="bgColorPicker">
+                </label>
+                <label>
+                    Upload Background Image:
+                    <input type="file" id="uploadBgImage" accept="image/*">
+                </label>
+                <label>
+                    Image Size:
+                    <input type="range" id="imageSizeRange" min="100" max="1000" value="300">
+                </label>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-header">Audio</div>
+            <div class="section-content">
+                <label>
+                    Sound:
+                    <input type="checkbox" id="soundToggle" checked> Enable
+                </label>
+                <label>
+                    Sound Volume:
+                    <input type="range" id="soundVolume" min="0" max="1" step="0.01" value="1">
+                </label>
+                <label>
+                    Upload Sound:
+                    <input type="file" id="uploadSound" accept="audio/*">
+                </label>
+            </div>
+        </div>
+        <button id="applySettings">Apply</button>
+    </div>
+    <div class="image-container">
+        <img id="mainImage" src="image1.jpg" alt="Default Image">
+    </div>
+
+    <audio id="squeak1" src="squeak1.mp3"></audio>
+
+    <script>
+        const settingsButton = document.querySelector('.settings-button');
+        const settingsDialog = document.querySelector('.settings-dialog');
+        const mainImage = document.getElementById('mainImage');
+        const uploadDefaultImage = document.getElementById('uploadDefaultImage');
+        const uploadPinchImage = document.getElementById('uploadPinchImage');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const uploadBgImage = document.getElementById('uploadBgImage');
+        const applySettings = document.getElementById('applySettings');
+        const imageSizeRange = document.getElementById('imageSizeRange');
+        const soundToggle = document.getElementById('soundToggle');
+        const soundVolume = document.getElementById('soundVolume');
+        const squeak1 = document.getElementById('squeak1');
+
+        let originalSrc = 'image1.jpg';
+        let newSrc = 'image2.jpg';
+        let timeout;
+        let soundEnabled = true;
+        let longPress = false;
+
+        settingsButton.addEventListener('click', () => {
+            settingsDialog.style.display = settingsDialog.style.display === 'none' ? 'block' : 'none';
+        });
+
+        mainImage.addEventListener('mousedown', () => {
+            mainImage.src = newSrc;
+            if (soundEnabled) {
+                squeak1.play();
+            }
+        });
+
+        mainImage.addEventListener('mouseup', () => {
+            mainImage.src = originalSrc;
+            longPress = false;
+        });
+
+        mainImage.addEventListener('mouseleave', () => {
+            mainImage.src = originalSrc;
+        });
+
+        mainImage.addEventListener('touchstart', () => {
+            timeout = setTimeout(() => {
+                mainImage.src = newSrc;
+                if (soundEnabled) {
+                    squeak1.play();
+                }
+                longPress = true;
+            }, 1500); // 1.5秒
+        });
+
+        mainImage.addEventListener('touchend', () => {
+            clearTimeout(timeout);
+            mainImage.src = originalSrc;
+            longPress = false;
+        });
+
+        mainImage.addEventListener('touchcancel', () => {
+            clearTimeout(timeout);
+            mainImage.src = originalSrc;
+        });
+
+        imageSizeRange.addEventListener('input', () => {
+            mainImage.style.width = `${imageSizeRange.value}px`;
+        });
+
+        soundToggle.addEventListener('change', () => {
+            soundEnabled = soundToggle.checked;
+        });
+
+        soundVolume.addEventListener('input', () => {
+            squeak1.volume = soundVolume.value;
+        });
+
+        applySettings.addEventListener('click', () => {
+            if (uploadDefaultImage.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    originalSrc = e.target.result;
+                    mainImage.src = originalSrc;
+                };
+                reader.readAsDataURL(uploadDefaultImage.files[0]);
+            }
+
+            if (uploadPinchImage.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    newSrc = e.target.result;
+                };
+                reader.readAsDataURL(uploadPinchImage.files[0]);
+            }
+
+            if (bgColorPicker.value) {
+                document.body.style.backgroundColor = bgColorPicker.value;
+                document.body.style.backgroundImage = '';
+            }
+
+            if (uploadBgImage.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.body.style.backgroundImage = `url(${e.target.result})`;
+                    document.body.style.backgroundColor = '';  // 取消背景颜色
+                    document.body.style.backgroundSize = 'cover';
+                };
+                reader.readAsDataURL(uploadBgImage.files[0]);
+            }
+            
+            if (uploadSound.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    squeak1.src = e.target.result;
+                };
+                reader.readAsDataURL(uploadSound.files[0]);
+            }
+        });
+    </script>
+</body>
+</html>
